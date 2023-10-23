@@ -2,7 +2,7 @@ using System;
 using System.Net;
 using System.Net.Sockets;
 
-namespace beepe0.UNetwork.UnityServer
+namespace Network.UnityServer
 {
     [Serializable]
     public sealed class UNetworkClient

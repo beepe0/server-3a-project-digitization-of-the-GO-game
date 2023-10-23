@@ -4,7 +4,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 
-namespace beepe0.UNetwork.UnityServer
+namespace Network.UnityServer
 {
     public static class UNetworkCore
     {

@@ -1,7 +1,7 @@
 using System.Threading.Tasks;
 using UnityEngine;
 
-namespace beepe0.UNetwork.UnityServer
+namespace Network.UnityServer
 {
     public sealed class UNetworkManagerServer : MonoBehaviour
     {

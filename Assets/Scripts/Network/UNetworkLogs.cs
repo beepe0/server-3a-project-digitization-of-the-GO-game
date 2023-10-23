@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace beepe0.UNetwork
+namespace Network
 {
     public abstract class UNetworkLogs
     {
