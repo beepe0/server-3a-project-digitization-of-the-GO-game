@@ -6,3 +6,7 @@
 	path = Assets/Scripts/Network/UNTools
 	url = https://github.com/beepe0/modules.git
 	branch = unettools
+[submodule "Assets/Scripts/Singleton"]
+	path = Assets/Scripts/Singleton
+	url = https://github.com/beepe0/modules.git
+	branch = singleton
