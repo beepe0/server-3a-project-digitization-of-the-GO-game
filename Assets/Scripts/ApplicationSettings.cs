@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using Singleton;
 
 public class ApplicationSettings : Singleton<ApplicationSettings>
 {
