@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="VcsDirectoryMappings">
+    <mapping directory="" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/Assets/Scripts/Network/UNTools" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/Assets/Scripts/Network/UServer" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/Assets/Scripts/Singleton" vcs="Git" />
+  </component>
+</project>
