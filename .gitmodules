@@ -1,9 +1,9 @@
-[submodule "Assets/Scripts/Network/UServer"]
-	path = Assets/Scripts/Network/UServer
+[submodule "Assets/Scripts/Network/UnityServer"]
+	path = Assets/Scripts/Network/UnityServer
 	url = https://github.com/beepe0/modules-for-my-projects.git
 	branch = unetserver
-[submodule "Assets/Scripts/Network/UNTools"]
-	path = Assets/Scripts/Network/UNTools
+[submodule "Assets/Scripts/Network/UnityTools"]
+	path = Assets/Scripts/Network/UnityTools
 	url = https://github.com/beepe0/modules-for-my-projects.git
 	branch = unettools
 [submodule "Assets/Scripts/Singleton"]
