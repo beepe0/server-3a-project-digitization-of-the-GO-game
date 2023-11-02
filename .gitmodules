@@ -1,12 +1,12 @@
 [submodule "Assets/Scripts/Network/UnityServer"]
 	path = Assets/Scripts/Network/UnityServer
-	url = https://github.com/beepe0/modules-for-my-projects.git
-	branch = unetserver
+	url = https://github.com/beepe0/modules.git
+	branch = network/unetserver
 [submodule "Assets/Scripts/Network/UnityTools"]
 	path = Assets/Scripts/Network/UnityTools
-	url = https://github.com/beepe0/modules-for-my-projects.git
-	branch = unettools
+	url = https://github.com/beepe0/modules.git
+	branch = network/unettools
 [submodule "Assets/Scripts/Singleton"]
 	path = Assets/Scripts/Singleton
-	url = https://github.com/beepe0/modules-for-my-projects.git
+	url = https://github.com/beepe0/modules.git
 	branch = singleton
