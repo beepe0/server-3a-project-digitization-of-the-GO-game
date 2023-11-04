@@ -339,6 +339,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: accd46fe2bc6a1b4f818ffec48be5691, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  dontDestroyOnLoad: 1
   serverPort: 12345
   serverInternetProtocol: 127.0.0.1
   slots: 2

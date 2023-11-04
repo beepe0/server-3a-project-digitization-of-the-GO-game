@@ -19,18 +19,19 @@ namespace Network.Connection
         private void Awake()
         {
             test = Instance;
-            networkServerManager.Server.RulesHandler.UpdateGeneralRules(new ConnectionRules.GeneralRules());
-            networkServerManager.Server.RulesHandler.UpdateInputRules(new ConnectionRules.InputRules());
-            networkServerManager.Server.RulesHandler.UpdateOutputRules(new ConnectionRules.OutputRules());
-            
             RulesHandler = networkServerManager.Server.RulesHandler;
             DataHandler = networkServerManager.Server.DataHandler;
+            
+            RulesHandler.UpdateGeneralRules(new ConnectionRules.GeneralRules());
+            RulesHandler.UpdateInputRules(new ConnectionRules.InputRules());
+            RulesHandler.UpdateOutputRules(new ConnectionRules.OutputRules());
             
             GeneralRules = networkServerManager.Server.GeneralRules as ConnectionRules.GeneralRules;
             InputRules = networkServerManager.Server.InputRules as ConnectionRules.InputRules;
             OutputRules = networkServerManager.Server.OutputRules as ConnectionRules.OutputRules;
             
             RulesHandler.AddNewRule((ushort)ConnectionRules.PacketType.HandShake, InputRules!.HandShake); 
+            RulesHandler.AddNewRule((ushort)ConnectionRules.PacketType.SynchronizePosition, InputRules!.SynchronizePosition); 
         }
     }
 }

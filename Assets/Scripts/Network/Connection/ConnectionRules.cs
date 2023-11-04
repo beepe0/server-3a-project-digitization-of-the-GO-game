@@ -15,7 +15,6 @@ namespace Network.Connection
         {
             public void OnWelcome(ushort clientId)
             {
-                Debug.Log(Connection.Instance);
                 Connection.Instance.OutputRules.HandShake(clientId);
             }
             public void OnDisconnect(ushort clientId)
