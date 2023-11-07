@@ -19,6 +19,7 @@ namespace Network.Connection
         public override void OnStartServer()
         {
             Debug.Log("OnStartServer!");
+            RulesHandler.AddRule((ushort)PacketType.HandShake, HandShake);
         }
         public override void OnDisconnectClient(ushort clientId)
         {
@@ -27,16 +28,34 @@ namespace Network.Connection
         public override void OnConnectClient(ushort clientId)
         {
             Debug.Log($"[{clientId}] Client was connected!");
-            Send(clientId);
+            HandShake(clientId);
         }
-
-        private void Send(ushort clientId)
+        private void HandShake(ushort clientId)
         {
-            UNetworkIOPacket packet = new UNetworkIOPacket(0);
-            
-            packet.Write($"Hello, your index - {clientId}");
+            UNetworkIOPacket packet = new UNetworkIOPacket((ushort)PacketType.HandShake);
             
             DataHandler.SendDataTcp(clientId, packet);
+        }
+        private void HandShake(ushort clientId, UNetworkReadablePacket readablePacket)
+        {
+            ushort id;
+            if ((id = readablePacket.Index) == clientId)
+            {
+                Debug.Log($"Client number {id}:{clientId}:{readablePacket.Index} is connected successfully!");
+            }
+            else
+            { 
+                Debug.Log($"Client number {id}:{clientId}:{readablePacket.Index} didn't connected successfully!");
+                Clients[clientId].Close();
+            }
+        }
+        public enum PacketType : byte
+        {
+            HandShake,
+            StartGame,
+            UpdatePlayer,
+            PawnOpen,
+            PawnClose,
         }
     }
 }

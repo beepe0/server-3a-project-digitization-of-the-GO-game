@@ -10,3 +10,7 @@
 	path = Assets/Scripts/Singleton
 	url = https://github.com/beepe0/modules.git
 	branch = singleton
+[submodule "Assets/Scripts/CustomEditor/Attributes"]
+	path = Assets/Scripts/CustomEditor/Attributes
+	url = https://github.com/beepe0/modules-for-my-projects.git
+	branch = custom-editor/attributes

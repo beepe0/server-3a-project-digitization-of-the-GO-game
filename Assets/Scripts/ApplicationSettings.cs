@@ -17,6 +17,7 @@ public class ApplicationSettings : Singleton<ApplicationSettings>
     protected override void OnAwake()
     {
         Application.targetFrameRate = frameRate;
+        Application.runInBackground = true;
         QualitySettings.vSyncCount = vSync;
 
         Cursor.lockState = cursorLockMode;
