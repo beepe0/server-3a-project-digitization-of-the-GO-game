@@ -340,6 +340,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   dontDestroyOnLoad: 1
+  startOnAwake: 1
   serverPort: 12345
   serverInternetProtocol: 127.0.0.1
   slots: 2
@@ -372,7 +373,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 753f7af39f114cceaa40f559152378c4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _persistent: 1
+  _dontDestroyOnLoad: 1
   networkServerManager: {fileID: 1946178843}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:

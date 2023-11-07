@@ -1,37 +1,42 @@
 ﻿using Network.UnityServer;
-using Network.UnityServer.Handlers;
-using Singleton;
+using Network.UnityTools;
 using UnityEngine;
 
 namespace Network.Connection
 {
-    public class Connection : Singleton<Connection>
+    public class Connection : UNetworkServer
     {
-        [SerializeField] public UNetworkServerManager networkServerManager;
-
-        public static Connection test;
-        public UNetworkServerRulesHandler RulesHandler;
-        public UNetworkServerDataHandler DataHandler;
-        
-        public ConnectionRules.GeneralRules GeneralRules;
-        public ConnectionRules.InputRules InputRules;
-        public ConnectionRules.OutputRules OutputRules;
-        private void Awake()
+        private void Awake() {
+            if (dontDestroyOnLoad) DontDestroyOnLoad(this);
+            if (startOnAwake) StartServer();
+        }
+        private void FixedUpdate() => UNetworkUpdate.Update();
+        private void OnApplicationQuit() => CloseServer();
+        public override void OnCloseServer()
         {
-            test = Instance;
-            RulesHandler = networkServerManager.Server.RulesHandler;
-            DataHandler = networkServerManager.Server.DataHandler;
+            Debug.Log("OnCloseServer!");
+        }
+        public override void OnStartServer()
+        {
+            Debug.Log("OnStartServer!");
+        }
+        public override void OnDisconnectClient(ushort clientId)
+        {
+            Debug.Log($"[{clientId}] Client was disconnected!");
+        }
+        public override void OnConnectClient(ushort clientId)
+        {
+            Debug.Log($"[{clientId}] Client was connected!");
+            Send(clientId);
+        }
+
+        private void Send(ushort clientId)
+        {
+            UNetworkIOPacket packet = new UNetworkIOPacket(0);
             
-            RulesHandler.UpdateGeneralRules(new ConnectionRules.GeneralRules());
-            RulesHandler.UpdateInputRules(new ConnectionRules.InputRules());
-            RulesHandler.UpdateOutputRules(new ConnectionRules.OutputRules());
+            packet.Write($"Hello, your index - {clientId}");
             
-            GeneralRules = networkServerManager.Server.GeneralRules as ConnectionRules.GeneralRules;
-            InputRules = networkServerManager.Server.InputRules as ConnectionRules.InputRules;
-            OutputRules = networkServerManager.Server.OutputRules as ConnectionRules.OutputRules;
-            
-            RulesHandler.AddNewRule((ushort)ConnectionRules.PacketType.HandShake, InputRules!.HandShake); 
-            RulesHandler.AddNewRule((ushort)ConnectionRules.PacketType.SynchronizePosition, InputRules!.SynchronizePosition); 
+            DataHandler.SendDataTcp(clientId, packet);
         }
     }
 }
