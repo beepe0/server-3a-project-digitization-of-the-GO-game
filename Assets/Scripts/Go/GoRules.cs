@@ -6,31 +6,31 @@ namespace Go
 {
     public class GoRules : MonoBehaviour
     {
-        private GoSettings goSettings;
-        private GoBoard goBoard;
-        private ushort lastIndex;
+        private GoSettings _goSettings;
+        private GoBoard _goBoard;
+        private ushort _lastIndex;
         public void GameInitialization(GoGame goGame)
         {
-            goSettings = goGame.Settings;
-            goBoard = goGame.Board;
+            _goSettings = goGame.Settings;
+            _goBoard = goGame.Board;
             
-            goSettings.prefabBoard.transform.localScale = new Vector3((goSettings.boardSize.x - 1) / goSettings.cellsSize, 1, (goSettings.boardSize.y - 1) / goSettings.cellsSize);
-            goSettings.boardMaterial.mainTextureScale = new Vector2((goSettings.boardSize.x - 1), (goSettings.boardSize.y - 1));
-            goSettings.pawnsSize = (20 / goSettings.cellsSize) / goSettings.cellsCoefSize;
+            gameObject.transform.localScale = new Vector3((_goSettings.boardSize.x - 1) / _goSettings.cellsSize, 1, (_goSettings.boardSize.y - 1) / _goSettings.cellsSize);
+            _goSettings.boardMaterial.mainTextureScale = new Vector2((_goSettings.boardSize.x - 1), (_goSettings.boardSize.y - 1));
+            _goSettings.pawnsSize = (20 / _goSettings.cellsSize) / _goSettings.cellsCoefSize;
             
-            goBoard.pawnCursor = Instantiate(goSettings.prefabPawnCursor, gameObject.transform);
-            goBoard.offset = new Vector2(goSettings.prefabBoard.transform.localScale.x / 2, -goSettings.prefabBoard.transform.localScale.z / 2);
-            goBoard.pawnOffset = new Vector2(goBoard.offset.x, -goBoard.offset.y);
-            goBoard.pawns = new GoPawn[goSettings.boardSize.x * goSettings.boardSize.y];
+            _goBoard.pawnCursor = Instantiate(_goSettings.prefabPawnCursor, gameObject.transform);
+            _goBoard.offset = new Vector2(gameObject.transform.localScale.x / 2, -gameObject.transform.localScale.z / 2);
+            _goBoard.pawnOffset = new Vector2(_goBoard.offset.x, -_goBoard.offset.y);
+            _goBoard.pawns = new GoPawn[_goSettings.boardSize.x * _goSettings.boardSize.y];
 
-            for (int x = 0; x < goSettings.boardSize.x; x++)
+            for (int x = 0; x < _goSettings.boardSize.x; x++)
             {
-                for (int y = 0; y > -goSettings.boardSize.y; y--)
+                for (int y = 0; y > -_goSettings.boardSize.y; y--)
                 {
-                    short convertMatrixToLine = GoTools.ConvertMatrixToLine(goSettings.boardSize, new Vector2(x, y));
+                    short convertMatrixToLine = GoTools.ConvertMatrixToLine(_goSettings.boardSize, new Vector2(x, y));
                     
-                    Vector3 newPos = new Vector3(x / goSettings.cellsSize - (goBoard.pawnOffset.x), 0.5f, y / goSettings.cellsSize + (goBoard.pawnOffset.y));
-                    GameObject pawnObject = Instantiate(goSettings.prefabPawnAB, newPos, Quaternion.identity, gameObject.transform);
+                    Vector3 newPos = new Vector3(x / _goSettings.cellsSize - (_goBoard.pawnOffset.x), 0.5f, y / _goSettings.cellsSize + (_goBoard.pawnOffset.y));
+                    GameObject pawnObject = Instantiate(_goSettings.prefabPawnAB, newPos, Quaternion.identity, gameObject.transform);
                     GoPawn node = new GoPawn(goGame, (ushort)convertMatrixToLine, pawnObject);
 
                     pawnObject.SetActive(false);
@@ -39,24 +39,24 @@ namespace Go
                     
                     for(ushort i = 0; i < 4; i++)
                     {
-                        short mtl = GoTools.ConvertMatrixToLine(goSettings.boardSize, new Vector2(x + GoPawn.OffsetNeighbours[i].x, y + GoPawn.OffsetNeighbours[i].y));
-                        node.Neighbours[i] = mtl >= 0 && mtl < goBoard.pawns.Length ? goBoard.pawns[mtl] : null;
+                        short mtl = GoTools.ConvertMatrixToLine(_goSettings.boardSize, new Vector2(x + GoPawn.OffsetNeighbours[i].x, y + GoPawn.OffsetNeighbours[i].y));
+                        node.Neighbours[i] = mtl >= 0 && mtl < _goBoard.pawns.Length ? _goBoard.pawns[mtl] : null;
                     }
                     
-                    goBoard.pawns[convertMatrixToLine] = node;
+                    _goBoard.pawns[convertMatrixToLine] = node;
                 }
             }
             
-            for (int x = 0; x < goSettings.boardSize.x; x++)
+            for (int x = 0; x < _goSettings.boardSize.x; x++)
             {
-                for (int y = 0; y > -goSettings.boardSize.y; y--)
+                for (int y = 0; y > -_goSettings.boardSize.y; y--)
                 {
-                    int convertMatrixToLine = GoTools.ConvertMatrixToLine(goSettings.boardSize, new Vector2(x, y));
+                    int convertMatrixToLine = GoTools.ConvertMatrixToLine(_goSettings.boardSize, new Vector2(x, y));
                     
                     for(ushort i = 0; i < 4; i++)
                     {
-                        short mtl = GoTools.ConvertMatrixToLine(goSettings.boardSize, new Vector2(x + GoPawn.OffsetNeighbours[i].x, y + GoPawn.OffsetNeighbours[i].y));
-                        goBoard.pawns[convertMatrixToLine].Neighbours[i] = mtl >= 0 && mtl < goBoard.pawns.Length ? goBoard.pawns[mtl] : null;
+                        short mtl = GoTools.ConvertMatrixToLine(_goSettings.boardSize, new Vector2(x + GoPawn.OffsetNeighbours[i].x, y + GoPawn.OffsetNeighbours[i].y));
+                        _goBoard.pawns[convertMatrixToLine].Neighbours[i] = mtl >= 0 && mtl < _goBoard.pawns.Length ? _goBoard.pawns[mtl] : null;
                     }
                 }
             }
@@ -65,11 +65,11 @@ namespace Go
         public void PawnInitialization(ushort clientId, UNetworkReadablePacket readablePacket)
         {
             GoPawn goPawn;
-            short convertMatrixToLine = GoTools.ConvertRayToLine(new Vector2(readablePacket.ReadFloat(), readablePacket.ReadFloat()), goBoard.offset, goSettings.boardSize, goSettings.cellsSize);
+            short convertMatrixToLine = GoTools.ConvertRayToLine(new Vector2(readablePacket.ReadFloat(), readablePacket.ReadFloat()), _goBoard.offset, _goSettings.boardSize, _goSettings.cellsSize);
 
-            if (convertMatrixToLine >= 0 && convertMatrixToLine < goBoard.pawns.Length && lastIndex != clientId)
+            if (convertMatrixToLine >= 0 && convertMatrixToLine < _goBoard.pawns.Length && _lastIndex != clientId)
             {
-                goPawn = goBoard.pawns[convertMatrixToLine].OpenMe(clientId, (goBoard.numberOfSteps % 2 == 0) ? NodeType.PawnA : NodeType.PawnB);
+                goPawn = _goBoard.pawns[convertMatrixToLine].OpenMe(clientId, (_goBoard.numberOfSteps % 2 == 0) ? NodeType.PawnA : NodeType.PawnB);
                 if (goPawn == null) return;
                 
                 ushort numberOfEmptyNeighbours = goPawn.GetNumberOfEmptyNeighbours();
@@ -97,8 +97,8 @@ namespace Go
                         goPawn.CloseMe(clientId);
                     }else 
                     {
-                        goBoard.numberOfSteps++;
-                        lastIndex = clientId;
+                        _goBoard.numberOfSteps++;
+                        _lastIndex = clientId;
                     }
                 }
             }
@@ -106,13 +106,13 @@ namespace Go
             UpdateBoard();
         }
 
-        public void PawnPass() => goBoard.numberOfSteps++;
+        public void PawnPass() => _goBoard.numberOfSteps++;
 
         public void UpdateBoard()
         {
-            for (int i = 0; i < goBoard.openPawns.Count && goBoard.openPawns.Count > 0; i++)
+            for (int i = 0; i < _goBoard.openPawns.Count && _goBoard.openPawns.Count > 0; i++)
             {
-                GoPawn goPawn = goBoard.openPawns[i];
+                GoPawn goPawn = _goBoard.openPawns[i];
                 if(goPawn.lider != null && !goPawn.CanLive())
                 {
                     goPawn.lider.RemoveAllFromListOfConnectedNeighbours(0);

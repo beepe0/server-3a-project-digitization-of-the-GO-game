@@ -2,6 +2,7 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/Assets/Scripts/CustomEditor/Attributes" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/Assets/Scripts/Network/UnityServer" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/Assets/Scripts/Network/UnityTools" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/Assets/Scripts/Singleton" vcs="Git" />

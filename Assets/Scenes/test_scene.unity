@@ -362,6 +362,7 @@ MonoBehaviour:
   _dontDestroyOnLoad: 1
   frameRate: 60
   vSync: 0
+  isRunInBackground: 1
   cursorLockMode: 0
   isVisibleCursor: 1
 --- !u!4 &690695207
@@ -548,6 +549,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1946178844}
   - component: {fileID: 1946178845}
+  - component: {fileID: 1946178846}
   m_Layer: 0
   m_Name: _network
   m_TagString: Network
@@ -589,11 +591,35 @@ MonoBehaviour:
   slots: 2
   receiveBufferSize: 512
   sendBufferSize: 512
+  _goGame: {fileID: 2141269457}
+--- !u!114 &1946178846
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1946178842}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aca6fb8277d442b590333c39dba47c2d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!4 &2141269455 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 6816488457963383251, guid: d2ad6135fd75b7d47b53be0699dfbffc, type: 3}
   m_PrefabInstance: {fileID: 8608189701105803419}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &2141269457 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 6029179493036098928, guid: d2ad6135fd75b7d47b53be0699dfbffc, type: 3}
+  m_PrefabInstance: {fileID: 8608189701105803419}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d16ea766e686106408ec050e76c32e3b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &8608189701105803419
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -602,6 +628,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1165347741}
     m_Modifications:
+    - target: {fileID: 3720338712537845742, guid: d2ad6135fd75b7d47b53be0699dfbffc, type: 3}
+      propertyPath: pawns.Array.size
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6029179493036098928, guid: d2ad6135fd75b7d47b53be0699dfbffc, type: 3}
+      propertyPath: conn
+      value: 
+      objectReference: {fileID: 1946178845}
     - target: {fileID: 6816488457963383251, guid: d2ad6135fd75b7d47b53be0699dfbffc, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0

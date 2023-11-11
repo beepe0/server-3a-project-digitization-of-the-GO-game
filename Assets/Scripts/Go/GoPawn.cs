@@ -45,7 +45,7 @@ namespace Go
         {
 			this.isClosed = false;
             this.isBlocked = this.lider.listOfConnectedNeighbours.Count == 1 && this.GetNumberOfEnemyNeighbours() == 4;
-            this.blockTime = this.isBlocked ? MainGame.Board.numberOfSteps + 1 : 0;
+            this.blockTime = this.isBlocked ? MainGame.Board.numberOfSteps + 2 : 0;
             this.pawnType = NodeType.None;
             this.pawnMeshRenderer.material = MainGame.Settings.materialPawnNone;
             // this.listOfConnectedNeighbours = null;
@@ -59,7 +59,6 @@ namespace Go
 
 		public GoPawn OpenMe(ushort clientId, NodeType nodeType)
 		{
-            Debug.Log($"BT: {this.blockTime}, NoS: {MainGame.Board.numberOfSteps}");
             if (this.isClosed || (this.isBlocked && (this.blockTime - MainGame.Board.numberOfSteps) > 0)) return null;
     
             //this.index = (ushort)MainGame.Board.openPawns.Count;

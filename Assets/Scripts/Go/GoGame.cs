@@ -28,14 +28,13 @@ namespace Go
             goRules = gameObject.GetComponent<GoRules>();
             goBoard = gameObject.GetComponent<GoBoard>();
             
-            conn.RulesHandler.AddRule((ushort)Connection.PacketType.StartGame, StartGame);
             conn.RulesHandler.AddRule((ushort)Connection.PacketType.PawnOpen, goRules.PawnInitialization);
         }
         private void Start()
         {
             goRules.GameInitialization(this);
         }
-        private void StartGame(ushort clientId, UNetworkReadablePacket readablePacket)
+        public void StartGame(ushort clientId)
         {
             UNetworkIOPacket packet = new UNetworkIOPacket((ushort)Connection.PacketType.StartGame);
             packet.Write(goSettings.pawnsSize);
@@ -43,6 +42,17 @@ namespace Go
             packet.Write(goSettings.boardSize.y);
             packet.Write(goSettings.cellsSize);
             packet.Write(goSettings.cellsCoefSize);
+
+            if (goBoard.openPawns.Count > 0)
+            {
+                packet.Write(goBoard.openPawns.Count);
+                foreach (GoPawn goPawn in goBoard.openPawns)
+                {
+                    packet.Write(goPawn.index);
+                    packet.Write((byte)goPawn.pawnType);
+                }
+            }
+            
             conn.DataHandler.SendDataTcp(clientId, packet);
 
             foreach (UNetworkClient client in conn.Clients.Values)
@@ -52,7 +62,7 @@ namespace Go
                 if (client.TcpHandler is { IsTcpConnect: true } && client.Index == clientId)
                 {
                     packet.Write(clientId);
-                    conn.DataHandler.SendDataToAllExceptClientTcp(clientId, packet);
+                    conn.DataHandler.SendDataToAllTcp(clientId, packet);
                 }
                 else if (client.TcpHandler is { IsTcpConnect: true } && client.Index != clientId)
                 {

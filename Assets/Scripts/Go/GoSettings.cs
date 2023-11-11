@@ -13,7 +13,6 @@ namespace Go
         [Header("Board")] 
         [SerializeField]
         public Material boardMaterial;
-        public GameObject prefabBoard;
         public Vector2Int boardSize;
         [Range(2, 20)]
         public float cellsSize;

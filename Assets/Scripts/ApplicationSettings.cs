@@ -8,6 +8,9 @@ public class ApplicationSettings : Singleton<ApplicationSettings>
 
     [SerializeField, Header("vSync")]
     private int vSync;
+    
+    [SerializeField, Header("Server")] 
+    public bool isRunInBackground;
 
     [SerializeField, Header("Cursor lock mode")]
     private CursorLockMode cursorLockMode;
@@ -17,7 +20,7 @@ public class ApplicationSettings : Singleton<ApplicationSettings>
     protected override void OnAwake()
     {
         Application.targetFrameRate = frameRate;
-        Application.runInBackground = true;
+        Application.runInBackground = isRunInBackground;
         QualitySettings.vSyncCount = vSync;
 
         Cursor.lockState = cursorLockMode;
