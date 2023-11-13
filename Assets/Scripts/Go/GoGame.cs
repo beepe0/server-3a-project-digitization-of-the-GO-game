@@ -2,6 +2,7 @@ using Network.Connection;
 using Network.UnityServer;
 using Network.UnityTools;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Go
 {
@@ -10,79 +11,135 @@ namespace Go
     [RequireComponent(typeof(GoBoard))]
     public class GoGame : MonoBehaviour
     {
-        [SerializeField] private Connection conn;
+        [SerializeField] private Connection _conn;
         
-        [SerializeField] private GoSettings goSettings;
-        [SerializeField] private GoRules goRules;
-        [SerializeField] private GoBoard goBoard;
+        [SerializeField] private GoSettings _goSettings;
+        [SerializeField] private GoRules _goRules;
+        [SerializeField] private GoBoard _goBoard;
         
-        public Connection Conn => conn;
-        public GoSettings Settings => goSettings;
-        public GoRules Rules => goRules;
-        public GoBoard Board => goBoard;
+        public Connection Conn => _conn;
+        public GoSettings Settings => _goSettings;
+        public GoRules Rules => _goRules;
+        public GoBoard Board => _goBoard;
 
         private void Awake()
         {
-            conn = GameObject.FindWithTag("Network").GetComponent<Connection>();
-            goSettings = gameObject.GetComponent<GoSettings>();
-            goRules = gameObject.GetComponent<GoRules>();
-            goBoard = gameObject.GetComponent<GoBoard>();
+            _conn = GameObject.FindWithTag("Network").GetComponent<Connection>();
+            _goSettings = gameObject.GetComponent<GoSettings>();
+            _goRules = gameObject.GetComponent<GoRules>();
+            _goBoard = gameObject.GetComponent<GoBoard>();
             
-            conn.RulesHandler.AddRule((ushort)Connection.PacketType.PawnOpen, goRules.PawnInitialization);
+            _conn.RulesHandler.AddRule((ushort)Connection.PacketType.PawnOpen, _goRules.PawnInitialization);
+            _conn.RulesHandler.AddRule((ushort)Connection.PacketType.PawnPass, _goRules.PawnPass);
         }
-        private void Start()
+        public void InitializingGame(GoGame goGame)
         {
-            goRules.GameInitialization(this);
-        }
-        public void StartGame(ushort clientId)
-        {
-            UNetworkIOPacket packet = new UNetworkIOPacket((ushort)Connection.PacketType.StartGame);
-            packet.Write(goSettings.pawnsSize);
-            packet.Write(goSettings.boardSize.x);
-            packet.Write(goSettings.boardSize.y);
-            packet.Write(goSettings.cellsSize);
-            packet.Write(goSettings.cellsCoefSize);
+            gameObject.transform.localScale = new Vector3((_goSettings.boardSize.x - 1) / _goSettings.cellsSize, 1, (_goSettings.boardSize.y - 1) / _goSettings.cellsSize);
+            _goSettings.boardMaterial.mainTextureScale = new Vector2((_goSettings.boardSize.x - 1), (_goSettings.boardSize.y - 1));
+            _goSettings.pawnsSize = (20 / _goSettings.cellsSize) / _goSettings.cellsCoefSize;
+            
+            _goBoard.offset = new Vector2(gameObject.transform.localScale.x / 2, -gameObject.transform.localScale.z / 2);
+            _goBoard.pawnOffset = new Vector2(_goBoard.offset.x, -_goBoard.offset.y);
+            _goBoard.pawns = new GoPawn[_goSettings.boardSize.x * _goSettings.boardSize.y];
 
-            if (goBoard.openPawns.Count > 0)
+            for (int x = 0; x < _goSettings.boardSize.x; x++)
             {
-                packet.Write(goBoard.openPawns.Count);
-                foreach (GoPawn goPawn in goBoard.openPawns)
+                for (int y = 0; y > -_goSettings.boardSize.y; y--)
+                {
+                    short convertMatrixToLine = GoTools.ConvertMatrixToLine(_goSettings.boardSize, new Vector2(x, y));
+                    
+                    Vector3 newPos = new Vector3(x / _goSettings.cellsSize - (_goBoard.pawnOffset.x), 0.5f, y / _goSettings.cellsSize + (_goBoard.pawnOffset.y));
+                    GameObject pawnObject = Instantiate(_goSettings.prefabPawnAB, newPos, Quaternion.identity, gameObject.transform);
+                    GoPawn node = new GoPawn(goGame, (ushort)convertMatrixToLine, pawnObject);
+
+                    pawnObject.SetActive(false);
+                    pawnObject.name = $"xyz: {newPos}";
+                    pawnObject.transform.SetParent(gameObject.transform);
+                    
+                    for(ushort i = 0; i < 4; i++)
+                    {
+                        short mtl = GoTools.ConvertMatrixToLine(_goSettings.boardSize, new Vector2(x + GoPawn.OffsetNeighbours[i].x, y + GoPawn.OffsetNeighbours[i].y));
+                        node.Neighbours[i] = mtl >= 0 && mtl < _goBoard.pawns.Length ? _goBoard.pawns[mtl] : null;
+                    }
+                    
+                    _goBoard.pawns[convertMatrixToLine] = node;
+                }
+            }
+            
+            for (int x = 0; x < _goSettings.boardSize.x; x++)
+            {
+                for (int y = 0; y > -_goSettings.boardSize.y; y--)
+                {
+                    int convertMatrixToLine = GoTools.ConvertMatrixToLine(_goSettings.boardSize, new Vector2(x, y));
+                    
+                    for(ushort i = 0; i < 4; i++)
+                    {
+                        short mtl = GoTools.ConvertMatrixToLine(_goSettings.boardSize, new Vector2(x + GoPawn.OffsetNeighbours[i].x, y + GoPawn.OffsetNeighbours[i].y));
+                        _goBoard.pawns[convertMatrixToLine].Neighbours[i] = mtl >= 0 && mtl < _goBoard.pawns.Length ? _goBoard.pawns[mtl] : null;
+                    }
+                }
+            }
+        }
+        public void JoinGame(ushort clientId)
+        {
+            UNetworkIOPacket packet = new UNetworkIOPacket((ushort)Connection.PacketType.JoinGame);
+            packet.Write(_goSettings.pawnsSize);
+            packet.Write(_goSettings.boardSize.x);
+            packet.Write(_goSettings.boardSize.y);
+            packet.Write(_goSettings.cellsSize);
+            packet.Write(_goSettings.cellsCoefSize);
+
+            if (_goBoard.openPawns.Count > 0)
+            {
+                packet.Write(_goBoard.openPawns.Count);
+                foreach (GoPawn goPawn in _goBoard.openPawns)
                 {
                     packet.Write(goPawn.index);
                     packet.Write((byte)goPawn.pawnType);
                 }
             }
             
-            conn.DataHandler.SendDataTcp(clientId, packet);
+            _conn.DataHandler.SendDataTcp(clientId, packet);
 
-            foreach (UNetworkClient client in conn.Clients.Values)
+            foreach (UNetworkClient client in _conn.Clients.Values)
             {
                 packet = new UNetworkIOPacket((ushort)Connection.PacketType.UpdatePlayer);
                 
                 if (client.TcpHandler is { IsTcpConnect: true } && client.Index == clientId)
                 {
                     packet.Write(clientId);
-                    conn.DataHandler.SendDataToAllTcp(clientId, packet);
+                    _conn.DataHandler.SendDataToAllTcp(clientId, packet);
                 }
                 else if (client.TcpHandler is { IsTcpConnect: true } && client.Index != clientId)
                 {
                     packet.Write(client.Index);
-                    conn.DataHandler.SendDataTcp(clientId, packet);
+                    _conn.DataHandler.SendDataTcp(clientId, packet);
                 }
             }
+        }
+        public void CreateGame(ushort clientId)
+        {
+            UNetworkIOPacket packet = new UNetworkIOPacket((ushort)Connection.PacketType.CreateGame);
+            packet.Write(_goSettings.pawnsSize);
+            packet.Write(_goSettings.boardSize.x);
+            packet.Write(_goSettings.boardSize.y);
+            packet.Write(_goSettings.cellsSize);
+            packet.Write(_goSettings.cellsCoefSize);
+            
+            _conn.DataHandler.SendDataToAllTcp(clientId, packet);
         }
         public void PawnOpen(ushort clientId, GoPawn goPawn)
         {
             UNetworkIOPacket packet = new UNetworkIOPacket((ushort)Connection.PacketType.PawnOpen);
             packet.Write(goPawn.index);
             packet.Write((byte)goPawn.pawnType);
-            conn.DataHandler.SendDataToAllTcp(clientId, packet);
+            _conn.DataHandler.SendDataToAllTcp(clientId, packet);
         }
         public void PawnClose(ushort clientId, GoPawn goPawn)
         {
             UNetworkIOPacket packet = new UNetworkIOPacket((ushort)Connection.PacketType.PawnClose);
             packet.Write(goPawn.index);
-            conn.DataHandler.SendDataToAllTcp(clientId, packet);
+            _conn.DataHandler.SendDataToAllTcp(clientId, packet);
         }
     }
 }

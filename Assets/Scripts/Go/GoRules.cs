@@ -1,75 +1,25 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using Network.Connection;
 using Network.UnityTools;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Go
 {
     public class GoRules : MonoBehaviour
-    {
-        private GoSettings _goSettings;
-        private GoBoard _goBoard;
+    { 
+        private GoGame _goGame;
         private ushort _lastIndex;
-        public void GameInitialization(GoGame goGame)
-        {
-            _goSettings = goGame.Settings;
-            _goBoard = goGame.Board;
-            
-            gameObject.transform.localScale = new Vector3((_goSettings.boardSize.x - 1) / _goSettings.cellsSize, 1, (_goSettings.boardSize.y - 1) / _goSettings.cellsSize);
-            _goSettings.boardMaterial.mainTextureScale = new Vector2((_goSettings.boardSize.x - 1), (_goSettings.boardSize.y - 1));
-            _goSettings.pawnsSize = (20 / _goSettings.cellsSize) / _goSettings.cellsCoefSize;
-            
-            _goBoard.pawnCursor = Instantiate(_goSettings.prefabPawnCursor, gameObject.transform);
-            _goBoard.offset = new Vector2(gameObject.transform.localScale.x / 2, -gameObject.transform.localScale.z / 2);
-            _goBoard.pawnOffset = new Vector2(_goBoard.offset.x, -_goBoard.offset.y);
-            _goBoard.pawns = new GoPawn[_goSettings.boardSize.x * _goSettings.boardSize.y];
-
-            for (int x = 0; x < _goSettings.boardSize.x; x++)
-            {
-                for (int y = 0; y > -_goSettings.boardSize.y; y--)
-                {
-                    short convertMatrixToLine = GoTools.ConvertMatrixToLine(_goSettings.boardSize, new Vector2(x, y));
-                    
-                    Vector3 newPos = new Vector3(x / _goSettings.cellsSize - (_goBoard.pawnOffset.x), 0.5f, y / _goSettings.cellsSize + (_goBoard.pawnOffset.y));
-                    GameObject pawnObject = Instantiate(_goSettings.prefabPawnAB, newPos, Quaternion.identity, gameObject.transform);
-                    GoPawn node = new GoPawn(goGame, (ushort)convertMatrixToLine, pawnObject);
-
-                    pawnObject.SetActive(false);
-                    pawnObject.name = $"xyz: {newPos}";
-                    pawnObject.transform.SetParent(gameObject.transform);
-                    
-                    for(ushort i = 0; i < 4; i++)
-                    {
-                        short mtl = GoTools.ConvertMatrixToLine(_goSettings.boardSize, new Vector2(x + GoPawn.OffsetNeighbours[i].x, y + GoPawn.OffsetNeighbours[i].y));
-                        node.Neighbours[i] = mtl >= 0 && mtl < _goBoard.pawns.Length ? _goBoard.pawns[mtl] : null;
-                    }
-                    
-                    _goBoard.pawns[convertMatrixToLine] = node;
-                }
-            }
-            
-            for (int x = 0; x < _goSettings.boardSize.x; x++)
-            {
-                for (int y = 0; y > -_goSettings.boardSize.y; y--)
-                {
-                    int convertMatrixToLine = GoTools.ConvertMatrixToLine(_goSettings.boardSize, new Vector2(x, y));
-                    
-                    for(ushort i = 0; i < 4; i++)
-                    {
-                        short mtl = GoTools.ConvertMatrixToLine(_goSettings.boardSize, new Vector2(x + GoPawn.OffsetNeighbours[i].x, y + GoPawn.OffsetNeighbours[i].y));
-                        _goBoard.pawns[convertMatrixToLine].Neighbours[i] = mtl >= 0 && mtl < _goBoard.pawns.Length ? _goBoard.pawns[mtl] : null;
-                    }
-                }
-            }
-        }
         
         public void PawnInitialization(ushort clientId, UNetworkReadablePacket readablePacket)
         {
             GoPawn goPawn;
-            short convertMatrixToLine = GoTools.ConvertRayToLine(new Vector2(readablePacket.ReadFloat(), readablePacket.ReadFloat()), _goBoard.offset, _goSettings.boardSize, _goSettings.cellsSize);
+            short convertMatrixToLine = GoTools.ConvertRayToLine(new Vector2(readablePacket.ReadFloat(), readablePacket.ReadFloat()), _goGame.Board.offset, _goGame.Settings.boardSize, _goGame.Settings.cellsSize);
 
-            if (convertMatrixToLine >= 0 && convertMatrixToLine < _goBoard.pawns.Length && _lastIndex != clientId)
+            if (convertMatrixToLine >= 0 && convertMatrixToLine < _goGame.Board.pawns.Length && _lastIndex != clientId)
             {
-                goPawn = _goBoard.pawns[convertMatrixToLine].OpenMe(clientId, (_goBoard.numberOfSteps % 2 == 0) ? NodeType.PawnA : NodeType.PawnB);
+                goPawn = _goGame.Board.pawns[convertMatrixToLine].OpenMe(clientId, (_goGame.Board.numberOfSteps % 2 == 0) ? NodeType.PawnA : NodeType.PawnB);
                 if (goPawn == null) return;
                 
                 ushort numberOfEmptyNeighbours = goPawn.GetNumberOfEmptyNeighbours();
@@ -97,7 +47,7 @@ namespace Go
                         goPawn.CloseMe(clientId);
                     }else 
                     {
-                        _goBoard.numberOfSteps++;
+                        _goGame.Board.numberOfSteps++;
                         _lastIndex = clientId;
                     }
                 }
@@ -106,13 +56,20 @@ namespace Go
             UpdateBoard();
         }
 
-        public void PawnPass() => _goBoard.numberOfSteps++;
-
+        public void PawnPass(ushort clientId, UNetworkReadablePacket readablePacket)
+        {
+            _goGame.Board.numberOfSteps++;
+            UNetworkIOPacket packet = new UNetworkIOPacket((ushort)Connection.PacketType.ConsoleCommand);
+            packet.Write($"passed [{_goGame.Board.numberOfSteps}]");
+            packet.Write(false);
+            packet.Write(true);
+            _goGame.Conn.DataHandler.SendDataToAllTcp(clientId, packet);
+        }
         public void UpdateBoard()
         {
-            for (int i = 0; i < _goBoard.openPawns.Count && _goBoard.openPawns.Count > 0; i++)
+            for (int i = 0; i < _goGame.Board.openPawns.Count && _goGame.Board.openPawns.Count > 0; i++)
             {
-                GoPawn goPawn = _goBoard.openPawns[i];
+                GoPawn goPawn = _goGame.Board.openPawns[i];
                 if(goPawn.lider != null && !goPawn.CanLive())
                 {
                     goPawn.lider.RemoveAllFromListOfConnectedNeighbours(0);

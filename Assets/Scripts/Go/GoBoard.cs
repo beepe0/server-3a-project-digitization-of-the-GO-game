@@ -14,7 +14,7 @@ namespace Go
         [ReadOnlyInspector] public Vector2 pawnOffset;
         [ReadOnlyInspector] public uint numberOfSteps;
         
-        public void ClearDesk(ushort clientId)
+        public void ClearBoard(ushort clientId)
         {
             foreach (GoPawn goPawn in pawns)
             {
