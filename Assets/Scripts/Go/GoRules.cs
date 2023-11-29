@@ -9,17 +9,17 @@ namespace Go
 {
     public class GoRules : MonoBehaviour
     { 
-        private GoGame _goGame;
+        public GoGame GoGame {get; set;}
         private ushort _lastIndex;
         
         public void PawnInitialization(ushort clientId, UNetworkReadablePacket readablePacket)
         {
             GoPawn goPawn;
-            short convertMatrixToLine = GoTools.ConvertRayToLine(new Vector2(readablePacket.ReadFloat(), readablePacket.ReadFloat()), _goGame.Board.offset, _goGame.Settings.boardSize, _goGame.Settings.cellsSize);
+            short convertMatrixToLine = GoTools.ConvertRayToLine(new Vector2(readablePacket.ReadFloat(), readablePacket.ReadFloat()), GoGame.Board.offset, GoGame.Settings.boardSize, GoGame.Settings.cellsSize);
 
-            if (convertMatrixToLine >= 0 && convertMatrixToLine < _goGame.Board.pawns.Length && _lastIndex != clientId)
+            if (convertMatrixToLine >= 0 && convertMatrixToLine < GoGame.Board.pawns.Length && _lastIndex != clientId)
             {
-                goPawn = _goGame.Board.pawns[convertMatrixToLine].OpenMe(clientId, (_goGame.Board.numberOfSteps % 2 == 0) ? NodeType.PawnA : NodeType.PawnB);
+                goPawn = GoGame.Board.pawns[convertMatrixToLine].OpenMe(clientId, (GoGame.Board.numberOfSteps % 2 == 0) ? NodeType.PawnA : NodeType.PawnB);
                 if (goPawn == null) return;
                 
                 ushort numberOfEmptyNeighbours = goPawn.GetNumberOfEmptyNeighbours();
@@ -44,10 +44,10 @@ namespace Go
                     if (!goPawn.CanLive() && goPawn.lider.listOfConnectedNeighbours.Count > 1)
                     {
                         goPawn.lider.listOfConnectedNeighbours.Remove(goPawn);
-                        goPawn.CloseMe(clientId);
+                        goPawn.CloseMe(GoGame.Conn.Index);
                     }else 
                     {
-                        _goGame.Board.numberOfSteps++;
+                        GoGame.Board.numberOfSteps++;
                         _lastIndex = clientId;
                     }
                 }
@@ -58,18 +58,18 @@ namespace Go
 
         public void PawnPass(ushort clientId, UNetworkReadablePacket readablePacket)
         {
-            _goGame.Board.numberOfSteps++;
+            GoGame.Board.numberOfSteps++;
             UNetworkIOPacket packet = new UNetworkIOPacket((ushort)Connection.PacketType.ConsoleCommand);
-            packet.Write($"passed [{_goGame.Board.numberOfSteps}]");
+            packet.Write($"passed [{GoGame.Board.numberOfSteps}]");
             packet.Write(false);
             packet.Write(true);
-            _goGame.Conn.DataHandler.SendDataToAllTcp(clientId, packet);
+            GoGame.Conn.DataHandler.SendDataToAllTcp(clientId, packet);
         }
         public void UpdateBoard()
         {
-            for (int i = 0; i < _goGame.Board.openPawns.Count && _goGame.Board.openPawns.Count > 0; i++)
+            for (int i = 0; i < GoGame.Board.openPawns.Count && GoGame.Board.openPawns.Count > 0; i++)
             {
-                GoPawn goPawn = _goGame.Board.openPawns[i];
+                GoPawn goPawn = GoGame.Board.openPawns[i];
                 if(goPawn.lider != null && !goPawn.CanLive())
                 {
                     goPawn.lider.RemoveAllFromListOfConnectedNeighbours(0);

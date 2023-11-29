@@ -29,6 +29,7 @@ namespace Go
             _goRules = gameObject.GetComponent<GoRules>();
             _goBoard = gameObject.GetComponent<GoBoard>();
             
+            _goRules.GoGame = this;
             _conn.RulesHandler.AddRule((ushort)Connection.PacketType.PawnOpen, _goRules.PawnInitialization);
             _conn.RulesHandler.AddRule((ushort)Connection.PacketType.PawnPass, _goRules.PawnPass);
         }
@@ -125,7 +126,6 @@ namespace Go
             packet.Write(_goSettings.boardSize.y);
             packet.Write(_goSettings.cellsSize);
             packet.Write(_goSettings.cellsCoefSize);
-            
             _conn.DataHandler.SendDataToAllTcp(clientId, packet);
         }
         public void PawnOpen(ushort clientId, GoPawn goPawn)

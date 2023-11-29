@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Text;
 using Go;
 using Network.UnityServer;
@@ -13,7 +14,7 @@ namespace Network.Connection
         [SerializeField] private GoGame _goGame;
         private void Awake() {
             if (dontDestroyOnLoad) DontDestroyOnLoad(this);
-            if (startOnAwake) StartServer();
+            if (startOnAwake) StartServer(0);
         }
         private void FixedUpdate() => UNetworkUpdate.Update();
         private void OnApplicationQuit() => CloseServer();
@@ -99,8 +100,8 @@ namespace Network.Connection
                         _goGame = Instantiate(_prefabBoard, GameObject.FindWithTag("Table").transform).GetComponent<GoGame>();
                         
                         _goGame.Settings.boardSize = new Vector2Int(int.Parse(keys[2]), int.Parse(keys[3]));
-                        _goGame.Settings.cellsSize = float.Parse(keys[4]);
-                        _goGame.Settings.cellsCoefSize = float.Parse(keys[5]);
+                        _goGame.Settings.cellsSize = float.Parse(keys[4], CultureInfo.InvariantCulture.NumberFormat);
+                        _goGame.Settings.cellsCoefSize = float.Parse(keys[5], CultureInfo.InvariantCulture.NumberFormat);
                         _goGame.InitializingGame(_goGame);
                         answer = "created the game!";
                     }
