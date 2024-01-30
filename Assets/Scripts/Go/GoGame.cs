@@ -1,8 +1,8 @@
 using Network.Connection;
+using Network.Connection.Player;
 using Network.UnityServer;
 using Network.UnityTools;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace Go
 {
@@ -80,53 +80,6 @@ namespace Go
                     }
                 }
             }
-        }
-        public void JoinGame(ushort clientId)
-        {
-            UNetworkIOPacket packet = new UNetworkIOPacket((ushort)Connection.PacketType.JoinGame);
-            packet.Write(_goSettings.pawnsSize);
-            packet.Write(_goSettings.boardSize.x);
-            packet.Write(_goSettings.boardSize.y);
-            packet.Write(_goSettings.cellsSize);
-            packet.Write(_goSettings.cellsCoefSize);
-
-            if (_goBoard.openPawns.Count > 0)
-            {
-                packet.Write(_goBoard.openPawns.Count);
-                foreach (GoPawn goPawn in _goBoard.openPawns)
-                {
-                    packet.Write(goPawn.index);
-                    packet.Write((byte)goPawn.pawnType);
-                }
-            }
-            
-            _conn.DataHandler.SendDataTcp(clientId, packet);
-
-            foreach (UNetworkClient client in _conn.Clients.Values)
-            {
-                packet = new UNetworkIOPacket((ushort)Connection.PacketType.UpdatePlayer);
-                
-                if (client.TcpHandler is { IsTcpConnect: true } && client.Index == clientId)
-                {
-                    packet.Write(clientId);
-                    _conn.DataHandler.SendDataToAllTcp(clientId, packet);
-                }
-                else if (client.TcpHandler is { IsTcpConnect: true } && client.Index != clientId)
-                {
-                    packet.Write(client.Index);
-                    _conn.DataHandler.SendDataTcp(clientId, packet);
-                }
-            }
-        }
-        public void CreateGame(ushort clientId)
-        {
-            UNetworkIOPacket packet = new UNetworkIOPacket((ushort)Connection.PacketType.CreateGame);
-            packet.Write(_goSettings.pawnsSize);
-            packet.Write(_goSettings.boardSize.x);
-            packet.Write(_goSettings.boardSize.y);
-            packet.Write(_goSettings.cellsSize);
-            packet.Write(_goSettings.cellsCoefSize);
-            _conn.DataHandler.SendDataToAllTcp(clientId, packet);
         }
         public void PawnOpen(ushort clientId, GoPawn goPawn)
         {

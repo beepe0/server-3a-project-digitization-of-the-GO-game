@@ -1,7 +1,8 @@
-﻿using System;
+﻿using System.Collections.Generic;
 using System.Globalization;
-using System.Text;
 using Go;
+using Network.Connection.Player;
+using Network.Connection.Room;
 using Network.UnityServer;
 using Network.UnityTools;
 using UnityEngine;
@@ -10,39 +11,35 @@ namespace Network.Connection
 {
     public class Connection : UNetworkServer
     {
-        [SerializeField] private GameObject _prefabBoard;
-        [SerializeField] private GoGame _goGame;
-        private void Awake() {
+        [SerializeField] public ConnectionManager connectionManager;
+
+        [SerializeField] private GlobalRoom[] previewRoom;
+        
+        public Stack<ushort> waitingPlayers = new Stack<ushort>();
+        
+        private void Awake()
+        {
             if (dontDestroyOnLoad) DontDestroyOnLoad(this);
-            if (startOnAwake) StartServer(0);
+            if (startOnAwake) StartServer<GlobalRoom, GlobalPlayer>(this);
+            //t
+            previewRoom = new GlobalRoom[Rooms.Values.Count];
+            foreach (var r in Rooms.Values)
+            {
+                previewRoom[r.Index] = r as GlobalRoom;
+            }
+            //t           
         }
         private void FixedUpdate() => UNetworkUpdate.Update();
         private void OnApplicationQuit() => CloseServer();
-        public override void OnCloseServer()
+        protected override void OnCloseServer()
         {
             Debug.Log("OnCloseServer!");
         }
-        public override void OnStartServer()
+        protected override void OnStartServer()
         {
             Debug.Log("OnStartServer!");
             RulesHandler.AddRule((ushort)PacketType.HandShake, HandShake);
             RulesHandler.AddRule((ushort)PacketType.ConsoleCommand, ConsoleCommand);
-        }
-        public override void OnDisconnectClient(ushort clientId)
-        {
-            Debug.Log($"[{clientId}] Client was disconnected!");
-            DisconnectingPlayer(clientId);
-        }
-        public override void OnConnectClient(ushort clientId)
-        {
-            Debug.Log($"[{clientId}] Client was connected!");
-            HandShake(clientId);
-        }
-        private void HandShake(ushort clientId)
-        {
-            UNetworkIOPacket packet = new UNetworkIOPacket((ushort)PacketType.HandShake);
-            
-            DataHandler.SendDataTcp(clientId, packet);
         }
         private void HandShake(ushort clientId, UNetworkReadablePacket readablePacket)
         {
@@ -55,14 +52,8 @@ namespace Network.Connection
             else
             { 
                 Debug.Log($"Client number {id}:{clientId}:{readablePacket.Index} didn't connected successfully!");
-                Clients[clientId].Close();
+                Clients[clientId].Disconnect();
             }
-        }
-        private void DisconnectingPlayer(ushort clientId)
-        {
-            UNetworkIOPacket packet = new UNetworkIOPacket((ushort)PacketType.DisconnectingPlayer);
-            
-            DataHandler.SendDataToAllExceptClientTcp(clientId, packet);
         }
         private void ConnectingPlayer(ushort clientId)
         {
@@ -70,6 +61,7 @@ namespace Network.Connection
             
             DataHandler.SendDataToAllExceptClientTcp(clientId, packet);
         }
+        //t
         private void ConsoleCommand(ushort clientId, UNetworkReadablePacket readablePacket)
         {
             string value = readablePacket.ReadString();
@@ -79,37 +71,39 @@ namespace Network.Connection
             string answer = "";
 
             string[] keys = value.Split(' ');
-
+            
             switch (keys[0])
             {
                 case "global" :
-                    if (keys[1].Equals("say"))
+                    if(keys[1].Equals("say"))
                     {
-                        for(int i = 2; i < keys  .Length; i++) answer += keys[i] + " ";
+                        for(int i = 2; i < keys.Length; i++) answer += keys[i] + " ";
                     }
                     else if(keys[1].Equals("clear-board"))
                     {
-                        _goGame.Board.ClearBoard(clientId);
-                        answer = "cleared the board!";
+                        GetClient<GlobalPlayer>(clientId).GetCurrentSession<GlobalRoom>().mainGame.Board.ClearBoard(clientId);
+                        answer = "the board cleared!";
                     }
-                    else if (keys[1].Equals("create-game"))
+                    else if(keys[1].Equals("find-game"))
                     {
                         isGlobal = true;
-                        if (_goGame != null) Destroy(_goGame.gameObject);
+             
+                        if(!waitingPlayers.Contains(clientId)) waitingPlayers.Push(clientId);
+                        else return;
                         
-                        _goGame = Instantiate(_prefabBoard, GameObject.FindWithTag("Table").transform).GetComponent<GoGame>();
-                        
-                        _goGame.Settings.boardSize = new Vector2Int(int.Parse(keys[2]), int.Parse(keys[3]));
-                        _goGame.Settings.cellsSize = float.Parse(keys[4], CultureInfo.InvariantCulture.NumberFormat);
-                        _goGame.Settings.cellsCoefSize = float.Parse(keys[5], CultureInfo.InvariantCulture.NumberFormat);
-                        _goGame.InitializingGame(_goGame);
-                        answer = "created the game!";
-                    }
-                    else if (keys[1].Equals("join-game"))
-                    {
-                        isGlobal = false;
-                        showAnswer = false;
-                        _goGame.JoinGame(clientId);
+                        if(waitingPlayers.Count > 1)
+                        {
+                            foreach (var uNetworkRoom in Rooms.Values)
+                            {
+                                if (uNetworkRoom is GlobalRoom { IsOpened: false } room)
+                                {
+                                    room.Create(Instantiate(connectionManager.PrefabBoard, GameObject.FindWithTag("Table").transform).GetComponent<GoGame>());
+                                    room.Enter(waitingPlayers);
+                                    break;
+                                }
+                            }
+                        }
+                        answer = "the game found!";
                     }
                     break;
                 default:
@@ -128,20 +122,20 @@ namespace Network.Connection
                 DataHandler.SendDataToAllTcp(clientId, packet);
             else
                 DataHandler.SendDataTcp(clientId, packet);
-            
         }
+        //t
         public enum PacketType : byte
         {
             HandShake,
             DisconnectingPlayer,
             ConnectingPlayer,
-            JoinGame,
-            CreateGame,
+            StartGame,
             UpdatePlayer,
             PawnOpen,
             PawnClose,
             PawnPass,
             ConsoleCommand,
+            UpdateListOfRooms
         }
     }
 }
